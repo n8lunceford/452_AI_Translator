@@ -5,6 +5,7 @@
 - Obtained Tatoeba dataset (1 hour)
 
 ### 3/28/2026
+- Worked on initial design (1 hour)
 - Wrote train_translator.py (code to train model) to a sub-par level (7 hours)
 
 ### 3/29/2026
