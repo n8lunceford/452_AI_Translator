@@ -19,3 +19,6 @@
 ### 3/31/2026
 - Set up MongoDB for local use and integrated MongoDB for translate.py to print desired translations to database(3 hours)
 - Fixed most UTF-8 characters such that Spanish sentences are more readable (2 hours)
+
+### 4/3/2026
+- Added features for user interaction with the database and changed order of commands (0.5 hours)

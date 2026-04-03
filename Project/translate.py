@@ -234,7 +234,7 @@ def main():
             break
 
         # ── Clear MongoDB table ──────────────────────────────────────────────
-        if user_input == "2":
+        if user_input == "4":
             if mongo_col is None:
                 print("[info] Connecting to MongoDB …")
                 mongo_col = get_mongo_collection()
@@ -242,6 +242,59 @@ def main():
             if mongo_col is not None:
                 result = mongo_col.delete_many({})
                 print(f"[cleared] {result.deleted_count} document(s) removed from the collection.")
+            else:
+                print("[error] Could not connect to MongoDB. Is it running?")
+            continue
+        
+        # ── Display all saved translations ───────────────────────────────────
+        if user_input == "2":
+            if mongo_col is None:
+                print("[info] Connecting to MongoDB …")
+                mongo_col = get_mongo_collection()
+
+            if mongo_col is not None:
+                docs = list(mongo_col.find())
+                if not docs:
+                    print("[info] No translations saved yet.")
+                else:
+                    print(f"\n{'─' * 60}")
+                    for doc in docs:
+                        print(f"  ID      : {doc['_id']}")
+                        print(f"  English : {doc['english']}")
+                        print(f"  Spanish : {doc['spanish']}")
+                        print(f"  Saved   : {doc['timestamp'].strftime('%Y-%m-%d %H:%M:%S')}")
+                        print(f"{'─' * 60}")
+            else:
+                print("[error] Could not connect to MongoDB. Is it running?")
+            continue
+
+        # ── Delete a translation by ID ───────────────────────────────────────
+        if user_input == "3":
+            if mongo_col is None:
+                print("[info] Connecting to MongoDB …")
+                mongo_col = get_mongo_collection()
+
+            if mongo_col is not None:
+                docs = list(mongo_col.find())
+                if not docs:
+                    print("[info] No translations saved yet.")
+                else:
+                    print(f"\n{'─' * 60}")
+                    for doc in docs:
+                        print(f"  ID      : {doc['_id']}")
+                        print(f"  English : {doc['english']}")
+                        print(f"  Spanish : {doc['spanish']}")
+                        print(f"{'─' * 60}")
+                    target_id = input("Enter the ID to delete > ").strip()
+                    try:
+                        from bson import ObjectId
+                        result = mongo_col.delete_one({"_id": ObjectId(target_id)})
+                        if result.deleted_count == 1:
+                            print(f"[deleted] Translation {target_id} removed.")
+                        else:
+                            print(f"[warn] No translation found with that ID.")
+                    except Exception as e:
+                        print(f"[error] Invalid ID format: {e}")
             else:
                 print("[error] Could not connect to MongoDB. Is it running?")
             continue
