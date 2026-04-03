@@ -9,7 +9,9 @@ This is the file containing the sentence pairs in English and Spanish. It is the
 This file takes the CSV file and trains a transformer model. Since I use a Mac, it is in my beest interest to put both of these files in Google Colab and run the script using the T4 GPU setting.
 
 ### model.pt and tokenizer.pkl
-These files are the essence of the model designed to translate from English to Spanish. The former contains the trained model weights, and tha latter contains the tokenizer vocabulary.
+These files are the essence of the model designed to translate from English to Spanish. The former contains the trained model weights, and tha latter contains the tokenizer vocabulary. The brain, and the dictionary.
+
+Upon use, the tokenizer converts English words into numbers and feeds them into the model. The model takes those numbers and converts them to new numbers. Finally, those new numbers are brought to the tokenizer and converted into Spanish text.
 
 If one file is lost, the other is useless. Both files should therefore be placed in the project folder in VS Code before the Colab runtime is terminated.
 
