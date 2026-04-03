@@ -1,7 +1,4 @@
 # AI_Translator_En_Es
-Is this thing on?
 
-#### Hello
-### Hello
-## Hello
-# Hello
+
+![alt text](drawSQL-image-export-2026-04-03.jpg)
