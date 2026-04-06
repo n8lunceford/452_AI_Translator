@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EN → ES Translator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:        #141414;
+      --bg2:       #1c1c1c;
+      --bg3:       #222222;
+      --border:    #2a2a2a;
+      --neon:      #39ff14;
+      --neon-dim:  #1a7a09;
+      --neon-glow: rgba(57, 255, 20, 0.15);
+      --neon-glow-strong: rgba(57, 255, 20, 0.35);
+      --text:      #e8e8e8;
+      --text-dim:  #666;
+      --danger:    #ff3c3c;
+      --danger-dim:#7a0a0a;
+      --mono:      'Share Tech Mono', monospace;
+      --sans:      'Rajdhani', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Scanline overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.08) 2px,
+        rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ── Header ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 28px 48px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 100%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--neon), transparent);
+      animation: scanH 4s linear infinite;
+    }
+
+    @keyframes scanH {
+      0%   { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .logo-bracket {
+      font-family: var(--mono);
+      font-size: 2rem;
+      color: var(--neon);
+      text-shadow: 0 0 12px var(--neon), 0 0 24px var(--neon-dim);
+      letter-spacing: -2px;
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.7; }
+    }
+
+    .logo-text {
+      font-family: var(--sans);
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .logo-text span {
+      color: var(--neon);
+      text-shadow: 0 0 8px var(--neon);
+    }
+
+    .header-tag {
+      margin-left: auto;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--neon-dim);
+      letter-spacing: 2px;
+      border: 1px solid var(--neon-dim);
+      padding: 4px 10px;
+    }
+
+    /* ── Main layout ── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 48px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    /* ── Translator card ── */
+    .translator {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0;
+      border: 1px solid var(--border);
+      background: var(--bg2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .translator::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, var(--neon-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .lang-panel {
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 260px;
+    }
+
+    .lang-label {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 4px;
+      color: var(--neon);
+      text-transform: uppercase;
+    }
+
+    textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 1.25rem;
+      font-weight: 400;
+      line-height: 1.6;
+      resize: none;
+      caret-color: var(--neon);
+    }
+
+    textarea::placeholder {
+      color: var(--text-dim);
+      font-style: italic;
+    }
+
+    .output-text {
+      flex: 1;
+      font-family: var(--sans);
+      font-size: 1.25rem;
+      font-weight: 400;
+      line-height: 1.6;
+      color: var(--neon);
+      text-shadow: 0 0 8px var(--neon-dim);
+      min-height: 80px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .output-text.empty {
+      color: var(--text-dim);
+      text-shadow: none;
+      font-style: italic;
+      font-size: 1rem;
+    }
+
+    /* ── Center divider ── */
+    .divider {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 32px 8px;
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+
+    .arrow-btn {
+      background: none;
+      border: 1px solid var(--neon);
+      color: var(--neon);
+      font-family: var(--mono);
+      font-size: 1.4rem;
+      width: 52px;
+      height: 52px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .arrow-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--neon);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.2s;
+    }
+
+    .arrow-btn:hover::before { transform: scaleX(1); }
+    .arrow-btn:hover { color: var(--bg); box-shadow: 0 0 20px var(--neon-glow-strong); }
+    .arrow-btn span { position: relative; z-index: 1; }
+
+    .arrow-btn.loading span { animation: spin 0.6s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Bottom bar of translator ── */
+    .translator-footer {
+      grid-column: 1 / -1;
+      border-top: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg3);
+    }
+
+    .status-msg {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--neon-dim);
+      letter-spacing: 1px;
+      min-height: 1.2em;
+      transition: color 0.3s;
+    }
+
+    .status-msg.success { color: var(--neon); text-shadow: 0 0 6px var(--neon-dim); }
+    .status-msg.error   { color: var(--danger); }
+
+    .save-btn {
+      background: none;
+      border: 1px solid var(--neon-dim);
+      color: var(--neon-dim);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      padding: 8px 20px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+
+    .save-btn:hover {
+      border-color: var(--neon);
+      color: var(--neon);
+      box-shadow: 0 0 12px var(--neon-glow);
+    }
+
+    .save-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* ── Section header ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 4px;
+    }
+
+    .section-title {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      letter-spacing: 4px;
+      color: var(--neon);
+      text-transform: uppercase;
+    }
+
+    .section-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--neon-dim), transparent);
+    }
+
+    .section-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .ghost-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 1px;
+      padding: 6px 14px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+
+    .ghost-btn:hover {
+      border-color: var(--text-dim);
+      color: var(--text);
+    }
+
+    .ghost-btn.danger:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    /* ── Saved translations list ── */
+    .saved-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .saved-empty {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      padding: 32px;
+      text-align: center;
+      border: 1px solid var(--border);
+      background: var(--bg2);
+    }
+
+    .saved-item {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      padding: 20px 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 16px;
+      align-items: center;
+      transition: border-color 0.2s, background 0.2s;
+      animation: fadeIn 0.3s ease forwards;
+      opacity: 0;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(6px); }
+    }
+
+    .saved-item:hover {
+      border-color: var(--neon-dim);
+      background: var(--bg3);
+    }
+
+    .saved-en {
+      font-size: 1rem;
+      font-weight: 400;
+      color: var(--text);
+    }
+
+    .saved-es {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--neon);
+      text-shadow: 0 0 6px var(--neon-dim);
+    }
+
+    .saved-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .saved-time {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+    }
+
+    .del-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      padding: 4px 10px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+    }
+
+    .del-btn:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+      background: var(--danger-dim);
+    }
+
+    /* ── Corner decorations ── */
+    .corner-tl, .corner-br {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-color: var(--neon);
+      border-style: solid;
+    }
+
+    .corner-tl { top: 0; left: 0; border-width: 2px 0 0 2px; }
+    .corner-br { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--neon-dim); }
+
+    /* ── Responsive ── */
+    @media (max-width: 700px) {
+      header { padding: 20px 24px; }
+      main { padding: 32px 16px; }
+      .translator { grid-template-columns: 1fr; }
+      .divider { flex-direction: row; padding: 12px 32px; border: none; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+      .saved-item { grid-template-columns: 1fr; }
+      .saved-meta { flex-direction: row; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-bracket">[</div>
+  <div class="logo-text">EN <span>→</span> ES</div>
+  <div class="logo-bracket">]</div>
+  <div class="header-tag">NEURAL TRANSLATOR v1.0</div>
+</header>
+
+<main>
+
+  <!-- ── Translator ── -->
+  <div>
+    <div class="translator" style="position:relative;">
+      <div class="corner-tl"></div>
+      <div class="corner-br"></div>
+
+      <!-- English input -->
+      <div class="lang-panel">
+        <div class="lang-label">// english_input</div>
+        <textarea id="inputText" rows="6" placeholder="Type an English sentence…" autofocus></textarea>
+      </div>
+
+      <!-- Arrow button -->
+      <div class="divider">
+        <button class="arrow-btn" id="translateBtn" title="Translate">
+          <span id="arrowIcon">→</span>
+        </button>
+      </div>
+
+      <!-- Spanish output -->
+      <div class="lang-panel">
+        <div class="lang-label">// spanish_output</div>
+        <div class="output-text empty" id="outputText">Translation will appear here…</div>
+      </div>
+
+      <!-- Footer -->
+      <div class="translator-footer">
+        <div class="status-msg" id="statusMsg"></div>
+        <button class="save-btn" id="saveBtn" disabled>[ SAVE TO DB ]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Saved Translations ── -->
+  <div>
+    <div class="section-header">
+      <div class="section-title">// saved_translations</div>
+      <div class="section-line"></div>
+      <div class="section-actions">
+        <button class="ghost-btn" onclick="loadTranslations()">REFRESH</button>
+        <button class="ghost-btn danger" onclick="clearAll()">CLEAR ALL</button>
+      </div>
+    </div>
+    <div class="saved-list" id="savedList">
+      <div class="saved-empty">No saved translations yet.</div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  const inputText   = document.getElementById("inputText");
+  const outputText  = document.getElementById("outputText");
+  const translateBtn= document.getElementById("translateBtn");
+  const arrowIcon   = document.getElementById("arrowIcon");
+  const saveBtn     = document.getElementById("saveBtn");
+  const statusMsg   = document.getElementById("statusMsg");
+  const savedList   = document.getElementById("savedList");
+
+  let lastEnglish = "";
+  let lastSpanish = "";
+
+  function setStatus(msg, type = "") {
+    statusMsg.textContent = msg;
+    statusMsg.className = "status-msg " + type;
+  }
+
+  // ── Translate ──────────────────────────────────────────────────────────────
+  async function translate() {
+    const text = inputText.value.trim();
+    if (!text) return;
+
+    translateBtn.disabled = true;
+    arrowIcon.textContent = "↻";
+    translateBtn.classList.add("loading");
+    outputText.className = "output-text empty";
+    outputText.textContent = "Translating…";
+    setStatus("processing...");
+    saveBtn.disabled = true;
+
+    try {
+      const res  = await fetch("/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      const data = await res.json();
+
+      if (data.error) {
+        setStatus(data.error, "error");
+        outputText.textContent = "Translation will appear here…";
+      } else {
+        lastEnglish = data.english;
+        lastSpanish = data.spanish;
+        outputText.textContent = data.spanish;
+        outputText.className = "output-text";
+        setStatus("// translation complete", "success");
+        saveBtn.disabled = false;
+      }
+    } catch (e) {
+      setStatus("connection error", "error");
+      outputText.textContent = "Translation will appear here…";
+    } finally {
+      translateBtn.disabled = false;
+      arrowIcon.textContent = "→";
+      translateBtn.classList.remove("loading");
+    }
+  }
+
+  // Translate on button click or Enter key
+  translateBtn.addEventListener("click", translate);
+  inputText.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); translate(); }
+  });
+
+  // ── Save ───────────────────────────────────────────────────────────────────
+  saveBtn.addEventListener("click", async () => {
+    if (!lastEnglish || !lastSpanish) return;
+    try {
+      const res  = await fetch("/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ english: lastEnglish, spanish: lastSpanish }),
+      });
+      const data = await res.json();
+      setStatus("// saved to database", "success");
+      saveBtn.disabled = true;
+      loadTranslations();
+    } catch (e) {
+      setStatus("save failed", "error");
+    }
+  });
+
+  // ── Load saved translations ────────────────────────────────────────────────
+  async function loadTranslations() {
+    try {
+      const res  = await fetch("/translations");
+      const docs = await res.json();
+
+      if (!docs.length) {
+        savedList.innerHTML = '<div class="saved-empty">No saved translations yet.</div>';
+        return;
+      }
+
+      savedList.innerHTML = docs.map((doc, i) => `
+        <div class="saved-item" style="animation-delay:${i * 40}ms">
+          <div class="saved-en">${escHtml(doc.english)}</div>
+          <div class="saved-es">${escHtml(doc.spanish)}</div>
+          <div class="saved-meta">
+            <div class="saved-time">${doc.timestamp}</div>
+            <button class="del-btn" onclick="deleteOne('${doc.id}')">DEL</button>
+          </div>
+        </div>
+      `).join("");
+    } catch (e) {
+      savedList.innerHTML = '<div class="saved-empty">Could not load translations.</div>';
+    }
+  }
+
+  // ── Delete one ─────────────────────────────────────────────────────────────
+  async function deleteOne(id) {
+    try {
+      await fetch(`/delete/${id}`, { method: "DELETE" });
+      loadTranslations();
+    } catch (e) {
+      setStatus("delete failed", "error");
+    }
+  }
+
+  // ── Clear all ──────────────────────────────────────────────────────────────
+  async function clearAll() {
+    if (!confirm("Clear all saved translations?")) return;
+    try {
+      await fetch("/clear", { method: "DELETE" });
+      loadTranslations();
+      setStatus("// database cleared", "success");
+    } catch (e) {
+      setStatus("clear failed", "error");
+    }
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  // Load on page open
+  loadTranslations();
+</script>
+
+</body>
+</html>

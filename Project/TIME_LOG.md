@@ -23,3 +23,6 @@
 
 ### 4/3/2026
 - Added features for user interaction with the database and changed order of commands (0.5 hours)
+
+### 4/6/2026
+- Added UI (app.py and index.html) to make project prettier (1 hour)
