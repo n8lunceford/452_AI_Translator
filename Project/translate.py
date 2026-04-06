@@ -209,8 +209,11 @@ def main():
     print("=" * 60)
     print("  English → Spanish Translator")
     print("  Type an English sentence to translate.")
-    print("  Type  1  to save the last translation to MongoDB.")
     print("  Type  0  to quit.")
+    print("  Type  1  to save the last translation to MongoDB.")
+    print("  Type  2  to display the list of saved translations.")
+    print("  Type  3  to select and delete one translation.")
+    print("  Type  4  to clear the table.")
     print("=" * 60)
 
     # ── Lazy MongoDB connection (only when the user presses 1) ───────────────
